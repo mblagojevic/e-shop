@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>E-Prodavnica</title>
+		<meta charset=utf-8>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" href="css/default.css" />
+		<link rel="shortcut icon" href="images/eshopICON.png" />
+	</head>
+	<script>
+		var artikli = ["Kutija Maska, 50 kom.", "Maska N95", "Pasta Za Zube Colgate", "Vlažne Maramice", "Obični Sapun", "Toalet Papir 4/1", "Ubrus Papir", 
+		"Tečni Sapun", "Sredstvo Za Dezinfekciju"];
+		var cenaArtikla = [201.00, 40.00, 150.99, 30.99, 56.99, 113.99, 125.99, 124.99, 191.99];
+		var booleanArtikla = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+		var booleanprikazaniArtikli = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+		var inp;
+		var ukupnaCena = 0;
+		var maxLenArtikli = 0;
+
+		function matchItem(input) {
+        	var a, b, i, val = input.value;
+			inp = input;
+
+        	closeAllLists();
+
+        	if (!val) { 
+				return false; 
+			}
+			
+			a = document.createElement("DIV"); 
+			a.setAttribute("id", input.id + "autocomplete-list"); 
+			a.setAttribute("class", "autocomplete-items");
+			
+			input.parentNode.appendChild(a);
+
+			for (i = 0; i < artikli.length; i++) {
+				for(j = 0; j < (maxLenArtikli - val.length); j++){
+
+					if ( artikli[i].substr(j, val.length).toUpperCase() == val.toUpperCase() && booleanprikazaniArtikli[i] == 0 ) {
+						
+						booleanprikazaniArtikli[i] = 1;
+
+						b = document.createElement("DIV");
+
+						b.innerHTML = artikli[i].substr(0, j);
+						b.innerHTML += "<strong>" + artikli[i].substr(j, val.length) + "</strong>";
+						b.innerHTML += artikli[i].substr(j + val.length);
+
+						b.innerHTML += "<input type='hidden' value='" + artikli[i] + "'>";
+						b.classList.add("search-result-wrapper"); 
+
+						b.addEventListener("click", function (e) {
+							input.value = e.target.getElementsByTagName("input")[0].value;
+							closeAllLists();
+						});
+						a.appendChild(b);
+					}
+
+
+				}
+			}
+		}
+		
+		function closeAllLists(elmnt) {
+			var x = document.getElementsByClassName("autocomplete-items");
+			for (var i = 0; i < x.length; i++) {
+				if (elmnt != x[0] && elmnt != inp) {
+					x[i].parentNode.removeChild(x[i]);
+				}
+			}
+			booleanprikazaniArtikli = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+		}
+
+		
+		function matchResult(input) {
+			this.addEventListener("keyup", function(event) {
+				if (event.keyCode === 13) {	
+        			var val = input.value;
+					var testArtikal = 0;
+					
+					for (i = 0; i < artikli.length; i++) {
+						if (artikli[i].toUpperCase() == val.toUpperCase()) {
+							if(booleanArtikla[i] == 1){
+								testArtikal = 0;
+								document.getElementById("search-bar").value = artikli[i] + " je ubačeno u korpu"; 
+							}
+							else if(booleanArtikla[i] == 0){
+								ukupnaCena = ukupnaCena + cenaArtikla[i]; 
+								input.style.borderColor = "#dadada";
+								document.getElementById("total-price").innerHTML = ukupnaCena + " din."; 
+								testArtikal = 1;
+								booleanArtikla[i] = 1;
+								document.getElementById("search-bar").value = ""; 
+								document.getElementById("dugme"+i).innerHTML =  "Proizvod je već ubačen u korpu";
+								closeAllLists ();
+							}
+						}
+					}
+					if(testArtikal == 0 && document.getElementById("search-bar").value.length >= 1){
+						input.style.borderColor = "#f26d7d"; 
+					}
+					else if(document.getElementById("search-bar").value.length < 1){
+						input.style.borderColor = "#dadada"; 
+					}
+				}
+			});
+		}
+
+		function clickFun(input, place){
+			if(booleanArtikla[place] == 1){
+				input.innerHTML = "Proizvod je već ubačen u korpu";
+			}
+			else if(booleanArtikla[place] == 0){
+				ukupnaCena = ukupnaCena + cenaArtikla[place];
+				document.getElementById("total-price").innerHTML = ukupnaCena + " din.";
+				booleanArtikla[place] = 1;
+				input.innerHTML = "Proizvod je ubačen u korpu";
+			}
+		}
+		
+		function finishBuy (input) {
+			if (ukupnaCena == 0) {
+				input.style.background = "#ff2525";
+				input.innerText = "Korpa je prazna";
+				input.style.color = "#ffffff";
+			}
+			else {
+				input.style.background = "#2bdd46";
+				input.innerText = "Kupovina je obrađena";
+				input.style.color = "#ffffff";
+				ukupnaCena = 0;
+				document.getElementById("total-price").innerHTML = "";
+			}
+			setTimeout(function(){ 
+				input.style.background = "#dcdcde";
+				input.innerText = "Završi kupovinu";
+				input.style.color = "#34323d";
+			}, 2000);
+		}
+
+		function getListLength() {
+			for (i = 0; i < artikli.length; i++) {
+				if(artikli[i].length > maxLenArtikli){
+					maxLenArtikli = artikli[i].length;
+				} 
+			}
+		}
+	</script>
+	<body  onload="getListLength()">
+		<header id="header-wrapper" >
+			<div class="header-inner">
+				<input id="search-bar" type="text" oninput="matchItem(this)" onkeyup="matchResult(this)" placeholder="Pretraži..." >
+			</div>
+		</header>
+		<div class="content-wrapper">
+			<div class="attention-wrapper">
+				<span>NAPOMENA: Proizvodi iz sekcije "Lična higijena" su ograničeni na jedan po kupcu. Hvala na razumevanju.</span>
+			</div>
+			<div id="div-center">
+				<div class="navigation-wrapper">
+					<ul class="clearfix">
+						<li><a href="javascript:;">Početna strana</a></li>
+						<li><span>Lična higijena</span></li>
+					</ul>
+				</div>
+				<div class="content-inner clearfix">
+					<div class="filter-wrapper">
+						<h2>Proizvodi:</h2>
+						<ul id="filter-menu">
+							<li><a href="javascript:;">Hrana i piće</a></li>
+							<li><a href="javascript:;">Osnovne namirnice</a></li>
+							<li><a href="javascript:;">Odeća i obuća</a></li>
+							<li><a href="javascript:;">Kućna higijena</a></li>
+							<li><a href="javascript:;" class="active-link">Lična Higijena</a></li>
+						</ul>
+						<h2>Ukupna cena:</h2>
+						<div class="bag-wrapper">
+							<span id="total-price"></span>
+						</div>
+						<button class="submit-button" onclick="finishBuy(this)" type="submit">Završi kupovinu</button>
+					</div>
+					<div class="item-wrapper">
+						<div class="item-row-wrapper">
+							<div class="item-box-wrapper">
+								<div class="item-box">
+									<img src="images/kutijamaske.png" alt="Kutija Maska" />
+									<h2 class="name">Kutija Maska, 50 kom.</h2>
+									<span class="price">201.00 din.</span>
+								</div>
+								<div class="add-button-wrapper">
+									<a class="add-button" id = "dugme0" onclick="clickFun(this, 0)">Dodaj u korpu</a>
+								</div>
+							</div>
+							<div class="item-box-wrapper">
+								<div class="item-box">
+									<img src="images/maskan95.png" alt="Maska N95" />
+									<h2 class="name">Maska N95, 1 kom.</h2>
+									<span class="price">40.00 din.</span>
+								</div>
+								<div class="add-button-wrapper">
+									<a class="add-button" id = "dugme1" onclick="clickFun(this, 1)">Dodaj u korpu</a>
+								</div>
+							</div>
+							<div class="item-box-wrapper">
+								<div class="item-box">
+									<img src="images/colgate.png" alt="Colgate Pasta" />
+									<h2 class="name">Colgate Pasta, 100ml</h2>
+									<span class="price">150.99 din.</span>
+								</div>
+								<div class="add-button-wrapper">
+									<a class="add-button" id = "dugme2" onclick="clickFun(this, 2)">Dodaj u korpu</a>
+								</div>
+							</div>
+						</div>
+						<div class="item-row-wrapper">
+							<div class="item-box-wrapper">
+								<div class="item-box">
+									<img src="images/vlaznemaramice.png" alt="Vlažne Maramice" />
+									<h2 class="name">Vlažne Maramice, 15/1</h2>
+									<span class="price">30.99 din.</span>
+								</div>
+								<div class="add-button-wrapper">
+									<a class="add-button" id = "dugme3" onclick="clickFun(this, 3)">Dodaj u korpu</a>
+								</div>
+							</div>
+							<div class="item-box-wrapper">
+								<div class="item-box">
+									<img src="images/sapunobicni.png" alt="Obični Sapun" />
+									<h2 class="name">Obični Sapun, 1 kom.</h2>
+									<span class="price">56.99 din.</span>
+								</div>
+								<div class="add-button-wrapper">
+									<a class="add-button" id = "dugme4" onclick="clickFun(this, 4)">Dodaj u korpu</a>
+								</div>
+							</div>
+							<div class="item-box-wrapper">
+								<div class="item-box">
+									<img src="images/papir4u1.png" alt="Toalet Papir 4u1" />
+									<h2 class="name">Toalet Papir, 4/1</h2>
+									<span class="price">113.99 din.</span>
+								</div>
+								<div class="add-button-wrapper">
+									<a class="add-button" id = "dugme5" onclick="clickFun(this, 5)">Dodaj u korpu</a>
+								</div>
+							</div>
+						</div>
+						<div class="item-row-wrapper">
+							<div class="item-box-wrapper">
+								<div class="item-box">
+									<img src="images/ubrus.png" alt="Ubrus Papir" />
+									<h2 class="name">Ubrus Papir, 1 kom.</h2>
+									<span class="price">125.99 din.</span>
+								</div>
+								<div class="add-button-wrapper">
+									<a class="add-button" id = "dugme6" onclick="clickFun(this, 6)">Dodaj u korpu</a>
+								</div>
+							</div>
+							<div class="item-box-wrapper">
+								<div class="item-box">
+									<img src="images/sapuntecni.png" alt="Tečni Sapun" />
+									<h2 class="name">Tečni Sapun, 1l</h2>
+									<span class="price">124.99 din.</span>
+								</div>
+								<div class="add-button-wrapper">
+									<a class="add-button" id = "dugme7" onclick="clickFun(this, 7)">Dodaj u korpu</a>
+								</div>
+							</div>
+							<div class="item-box-wrapper">
+								<div class="item-box">
+									<img src="images/sredstvodezinf.png" alt="Sredstvo za dezinfekciju" />
+									<h2 class="name">Sredstvo za dezinfekciju</h2>
+									<span class="price">191.99 din.</span>
+								</div>
+								<div class="add-button-wrapper">
+									<a class="add-button" id = "dugme8" onclick="clickFun(this, 8)">Dodaj u korpu</a>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
